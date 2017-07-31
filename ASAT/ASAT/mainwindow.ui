@@ -29,7 +29,7 @@
      <rect>
       <x>600</x>
       <y>290</y>
-      <width>741</width>
+      <width>462</width>
       <height>231</height>
      </rect>
     </property>
@@ -370,19 +370,6 @@
      <string>0</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="maxcoeff">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>860</y>
-      <width>111</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Max Coefficients</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="geometry">
     <property name="geometry">
      <rect>
@@ -407,71 +394,6 @@
     </property>
     <property name="text">
      <string>Plot in Time</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="Beamform_button">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>770</y>
-      <width>111</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Beamform</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="LocalizeBins">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>740</y>
-      <width>111</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Localize Freq Bins</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="STFT_Signal">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>710</y>
-      <width>111</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>STFT Signal</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="Coefficients">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>800</y>
-      <width>111</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Coefficients</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_2">
-    <property name="geometry">
-     <rect>
-      <x>460</x>
-      <y>830</y>
-      <width>111</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>OpenWav</string>
     </property>
    </widget>
    <widget class="QListWidget" name="filelist">
@@ -613,16 +535,6 @@
     </property>
     <property name="text">
      <string>PLAY</string>
-    </property>
-   </widget>
-   <widget class="QCustomPlot" name="algorithmplot" native="true">
-    <property name="geometry">
-     <rect>
-      <x>600</x>
-      <y>530</y>
-      <width>741</width>
-      <height>231</height>
-     </rect>
     </property>
    </widget>
    <widget class="QLabel" name="label_3">
@@ -816,8 +728,8 @@
    <widget class="QCheckBox" name="SimulationData">
     <property name="geometry">
      <rect>
-      <x>610</x>
-      <y>770</y>
+      <x>460</x>
+      <y>340</y>
       <width>131</width>
       <height>17</height>
      </rect>
@@ -829,7 +741,7 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>750</x>
+      <x>600</x>
       <y>770</y>
       <width>101</width>
       <height>16</height>
@@ -842,7 +754,7 @@
    <widget class="QLabel" name="pressure_avg">
     <property name="geometry">
      <rect>
-      <x>870</x>
+      <x>710</x>
       <y>770</y>
       <width>47</width>
       <height>13</height>
@@ -872,6 +784,16 @@
       <y>740</y>
       <width>256</width>
       <height>81</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCustomPlot" name="algorithmplot" native="true">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>540</y>
+      <width>462</width>
+      <height>231</height>
      </rect>
     </property>
    </widget>

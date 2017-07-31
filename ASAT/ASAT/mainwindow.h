@@ -46,12 +46,9 @@ private:
 
 public slots:
     void handlebutton();
-    void calculatecoeff();
     void plotgraph();
     void plotgraphintime();
     void geometry();
-    void convolvesignals();
-    void Get_STFT();
     void GenerateMicArray();
     void AddFile();
     void MatchWav();

@@ -168,7 +168,7 @@ void MicrophoneQuadrature::calcsphericalharmonics_c(complex<double> * pressureva
 
                             complex<double> harmonic = conj(calcharmonic);
 
-                            *(sph_harmonics+counter) += ((complex<double>)(pressurevalues[ml].real())) * harmonic  * ((complex<double>)*(this->SurfaceCoeff+ml));
+                            *(sph_harmonics+counter) += ((complex<double>)(pressurevalues[ml])) * harmonic  * ((complex<double>)*(this->SurfaceCoeff+ml));
 
                             counter++;
 
@@ -251,19 +251,16 @@ double MicrophoneQuadrature::ComputePressure(double azimuth, double elevation,in
                for(int sph_m= -sph_n ; sph_m <= sph_n ;sph_m++)
                    {
 
-                       complex<double> harmonic = (complex<double>)boost::math::spherical_harmonic(sph_n,sph_m,get<0>(p2),get<1>(p2));
+                       complex<double> harmonic = (complex<double>)boost::math::spherical_harmonic((double)sph_n,(double)sph_m,get<0>(p2),get<1>(p2));
 
-                       valuecalc += (complex<double>)(*(this->sph_harmonics+counter)) * harmonic  ;
+                       valuecalc += (complex<double>)(*(this->sph_harmonics+counter)) * harmonic   ;
 
                        counter++;
 
                   }
          }
 
-    if(valuecalc.real()>0)
-        return valuecalc.real()*valuecalc.real();
-    else
-        return 0;
+     return pow(abs(valuecalc) * abs(valuecalc),1);;
 
 
 
@@ -276,12 +273,18 @@ double* MicrophoneQuadrature::GeneratePowerMap()
 
     double* computedval = (double*)calloc(360*180,sizeof(double));
 
-    QFile file("out.txt");
+    QFile file("out_r.txt");
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
             return 0;
 
         QTextStream out(&file);
 
+
+        QFile file_i("out_i.txt");
+            if (!file_i.open(QIODevice::WriteOnly | QIODevice::Text))
+                return 0;
+
+            QTextStream out_i(&file_i);
 
 
      for(int cnt =0; cnt < 180;cnt++)
@@ -302,7 +305,7 @@ double* MicrophoneQuadrature::GeneratePowerMap()
                    for(int sph_m= ((-1) *sph_n) ; sph_m <= sph_n ;sph_m++)
                        {
 
-                           complex<double> harmonic = (complex<double>)boost::math::spherical_harmonic(sph_n,sph_m,get<0>(p1),get<1>(p1));
+                           complex<double> harmonic = (complex<double>)boost::math::spherical_harmonic((double)sph_n,(double)sph_m,get<0>(p1),get<1>(p1));
 
                            computation += (*(sph_harmonics+counter)) * harmonic  ;
 
@@ -310,13 +313,15 @@ double* MicrophoneQuadrature::GeneratePowerMap()
 
                       }
              }
-    if(computation.real()>0  )
-        *(computedval+cnt*360+phicnt) = computation.real()*computation.real();
 
-        out << *(computedval+cnt*360+phicnt) << " ";
+    *(computedval+cnt*360+phicnt) = pow(abs(computation) * abs(computation),1);
+
+        out << computation.real() << " ";
+        out_i << computation.imag() << " ";
 
      }
         out << "\n";
+        out_i << "\n";
     }
 
 

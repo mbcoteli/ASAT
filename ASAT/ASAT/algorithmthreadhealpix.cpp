@@ -44,13 +44,18 @@ bool* ComputePSEHealpix(double* currlevel, int currlevind,double* lowerlev,bool*
 
 
 
-
+    // PSESum is summation of all pixel values
+    // Psum = p1+p2+p3....+pN
     for(int sm=0;sm <currlevind;sm++)
     {
         if(currlevel[sm]!=0)
         PSESum += (currlevel[sm]);
 
     }
+
+    //PSE is calculated using the formula
+    // PSEbefore = (p1/Psum) * log(p1/Psum) + (p2/Psum) * log(p2/Psum) +...
+    //               (pN/Psum) * log(pN/Psum)
 
     for(int sm=0;sm <currlevind;sm++)
     {
@@ -59,6 +64,9 @@ bool* ComputePSEHealpix(double* currlevel, int currlevind,double* lowerlev,bool*
 
     }
 
+    // Compute if a pixel is divided into 4 equal area.
+    // get higher RI values and average
+    // p = (p1 + p2 + p3+ p4) / 4
     for(int iter =0; iter <currlevind;iter++)
     {
         for(int kml =0;kml <4;kml++)
@@ -69,11 +77,15 @@ bool* ComputePSEHealpix(double* currlevel, int currlevind,double* lowerlev,bool*
         useval[iter] =comp;
     }
 
-
+    double differenceval;
 
     for(int iterin =0; iterin < currlevind;iterin++)
     {
         PSESum = 0;
+
+        // Get summation if a pixel is divided.
+        // If pixel 0 is divided what will happen,
+        // If pixel 1 is divided what will happen
         for(int sm=0;sm <currlevind;sm++)
         {
             if(iterin == sm)
@@ -81,6 +93,10 @@ bool* ComputePSEHealpix(double* currlevel, int currlevind,double* lowerlev,bool*
             else
                 PSESum += (currlevel[sm]);
         }
+
+        // Compute the PSE value if the pixel is divided into 4 equal areas.
+        // PSEafter_division = (p1/Psum) * log(p1/Psum) + (p2/Psum) * log(p2/Psum)
+        //    +...+(pN/Psum) * log(pN/Psum)
 
         for(int kml =0;kml <currlevind;kml++)
         {
@@ -90,30 +106,27 @@ bool* ComputePSEHealpix(double* currlevel, int currlevind,double* lowerlev,bool*
             else if(iterin!=kml && currlevel[kml]!=0)
                 PSE[kml] += (currlevel[kml]/PSESum) * log((currlevel[kml]/PSESum));
         }
-    }
-    double difference;
 
-    for(int kml =0;kml <currlevind;kml++)
+
+
+    }
+
+    for(int iterin =0; iterin < currlevind;iterin++)
     {
-        difference += (PSE[kml] -PSEvalue);
-    }
-
-    difference /=(double)currlevind ;
-
-    double differenceval;
-    for(int kml =0;kml <currlevind;kml++)
+    differenceval = PSE[iterin] -PSEvalue;
+    if(differenceval  < 0)
     {
-        differenceval = PSE[kml] -PSEvalue;
-        if(difference  > differenceval)
-          resultPSE[kml] =true;
-        else
-          resultPSE[kml] =false;
-
-        if((!prevmask[kml/4]))
-           resultPSE[kml] =false;
+      resultPSE[iterin] =true;
+    }
+    else
+    {
+      resultPSE[iterin] =false;
     }
 
+    if((!prevmask[iterin/4]))
+       resultPSE[iterin] =false;
 
+    }
 
 
    /* int workingpixel =  currlevind/12;
@@ -201,13 +214,6 @@ void algorithmthreadhealpix::run()
    double* AnglesPhiRI6 = ReadAzimuthAngles(32);
 
    double* measuredpressuresRI6 =  MeasuredPowerValues(locsizeRI6,AnglesThetaRI6,AnglesPhiRI6,5);
-
-   int locsizeRI7 = GetLocationSizes(64);
-   double* AnglesThetaRI7 = ReadElevationAngles(64);
-   double* AnglesPhiRI7 = ReadAzimuthAngles(64);
-
-   double* measuredpressuresRI7 =  MeasuredPowerValues(locsizeRI7,AnglesThetaRI7,AnglesPhiRI7,5);
-
    bool* result = (bool*)malloc(3*sizeof(bool));
 
    result[0] = true;
@@ -218,27 +224,27 @@ void algorithmthreadhealpix::run()
    result = ComputePSEHealpix(measuredpressuresRI1,locsizeRI1,measuredpressuresRI2,result);
 
    emit Calculated(locsizeRI1,measuredpressuresRI1,result,AnglesPhiRI1,AnglesThetaRI1);
-   this->msleep(1000);
+   //this->msleep(1000);
 
    result = ComputePSEHealpix(measuredpressuresRI2,locsizeRI2,measuredpressuresRI3,result);
 
    emit Calculated(locsizeRI2,measuredpressuresRI2,result,AnglesPhiRI2,AnglesThetaRI2);
-   this->msleep(1000);
+   //this->msleep(1000);
 
    result = ComputePSEHealpix(measuredpressuresRI3,locsizeRI3,measuredpressuresRI4,result);
 
    emit Calculated(locsizeRI3,measuredpressuresRI3,result,AnglesPhiRI3,AnglesThetaRI3);
-   this->msleep(1000);
+  // this->msleep(1000);
 
    result = ComputePSEHealpix(measuredpressuresRI4,locsizeRI4,measuredpressuresRI5,result);
 
    emit Calculated(locsizeRI4,measuredpressuresRI4,result,AnglesPhiRI4,AnglesThetaRI4);
-   this->msleep(1000);
+   //this->msleep(1000);
 
    result = ComputePSEHealpix(measuredpressuresRI5,locsizeRI5,measuredpressuresRI6,result);
 
    emit Calculated(locsizeRI5,measuredpressuresRI5,result,AnglesPhiRI5,AnglesThetaRI5);
-   this->msleep(1000);
+   //this->msleep(1000);
 }
 
 double* algorithmthreadhealpix::MeasuredPowerValues(int locsize,double* AnglesTheta,double* AnglesPhi,int maxharmonic)

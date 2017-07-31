@@ -35,8 +35,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->harmonic_button,SIGNAL(released()),this,SLOT(handlebutton()));
 
-    connect(ui->STFT_Signal,SIGNAL(released()),this,SLOT(Get_STFT()));
-
     connect(ui->generate_quad,SIGNAL(released()),this,SLOT(GenerateMicArray()));
 
     connect(ui->add_file_btn,SIGNAL(released()),this,SLOT(AddFile()));
@@ -206,6 +204,7 @@ void MainWindow::STFTSelected()
    //colorscale->axis()->setLabel("Source Localization");
 
    colormap->setGradient(QCPColorGradient::gpPolar);
+   colormap->setInterpolate(false);
 
    colormap->rescaleDataRange();
 
@@ -476,6 +475,9 @@ for(int phicnt =0; phicnt < 360;phicnt++)
     complex<double> realval =   abs(*(values+phicnt*181+cnt));
     colormap->data()->setCell(cnt,phicnt,abs(realval));
 
+    colormap->setInterpolate(false);
+    colormap->rescaleDataRange();
+
 
  }
 
@@ -639,106 +641,8 @@ return outputsignal;
 
     complex<double> * frequencybinvals;
 
-void MainWindow::Get_STFT()
-{
-
-    int sampleinfile = 441000;
-
-    double * pressureval = (double *) malloc(sizeof(double)*sampleinfile*32);
-
-    QString filename = "womanh180manh60.txt";
-
-
-    QString folderm = "C:\\Spatial_audio\\Testdata\\" + filename;
-
-
-    //Get pressure values from txt file
-    QFile file(folderm);
-
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-
-    QTextStream in(&file);
-
-    int count = 0;
-
-    for(int i = 0; i < sampleinfile; ++i)
-            {
-          QString line = in.readLine();
-
-          QVector<QString> var = line.split(" ").toVector();
-
-          for(int kl=0; kl< var.size();kl++)
-                {
-                if(var.at(kl)!="")
-                    {
-
-                        pressureval[i+sampleinfile*count]= var.at(kl).toDouble();
-                        count++;
-                        if(count==32)
-                            break;
-
-                    }
-                }
-          count=0;
-            }
-
-    int windows = 2048;
-    int hopsize =1024;
-    int fftsize = 1025 * ((sampleinfile/(windows-hopsize)));
-
-    frequencybinvals = (complex<double> *)malloc(fftsize*32*sizeof(complex<double>) );
-
-    QFile filemicfft("C:\\Spatial_audio\\Eigenmike_Beamforming\\fftresultsmic0real.txt");
-
-    filemicfft.open(QIODevice::WriteOnly | QIODevice::Text);
-
-    QTextStream inmicfft(&filemicfft);
-
-    QFile filemicfftcomplex("C:\\Spatial_audio\\Eigenmike_Beamforming\\fftresultsmic0comp.txt");
-
-    filemicfftcomplex.open(QIODevice::WriteOnly | QIODevice::Text);
-
-    QTextStream inmicfftcomp(&filemicfftcomplex);
-
-    for(int kl =0;kl < 32;kl++)
-    {
-
-        complex<double> * fftvalues = STFT(pressureval+kl*sampleinfile, sampleinfile, 2048, 1024);
-        memcpy(frequencybinvals+kl*fftsize,fftvalues,fftsize* sizeof(complex<double>));
-    }
-
-    for(int ff =0;ff < fftsize;ff++)
-    {
-
-        if(ff%1025 ==0&&ff!=0)
-                {
-                    inmicfft << "\n" ;
-                    inmicfftcomp << "\n" ;
-                }
-            complex<double> resultvalue = *(frequencybinvals+ff);
-            inmicfft << resultvalue.real() << " "  ;
-            inmicfftcomp << resultvalue.imag() << " "  ;
-
-
-
-    }
-
-
-
-      filemicfft.close();
-      filemicfftcomplex.close();
-
-}
-
-
 void MainWindow::decorate()
 {
-
-
-
-    connect(ui->Coefficients,SIGNAL(released()),this,SLOT(calculatecoeff()));
-
-    connect(ui->maxcoeff,SIGNAL(released()),this,SLOT(plotgraph()));
 
     connect(ui->plotintime,SIGNAL(released()),this,SLOT(plotgraphintime()));
 
@@ -749,251 +653,7 @@ void MainWindow::decorate()
 
 }
 
-void MainWindow::calculatecoeff()
-{
-    //file = "D:\Spatial_audio\Records\irsh0v0.mat";
-
-    MicSize =32;
-
-    samplesize =10001;
-
-    Nharm =5;
-
-    int harmonicsize =25;
-
-    double* pressurevalues = (double*) malloc(MicSize * sizeof(double));
-
-    double* pressurevalues_def = (double*) malloc(MicSize * sizeof(double));
-
-    double* angles_fnm = (double*) malloc((2)* MicSize * sizeof(double));
-
-    double* surface_coeff = (double*) malloc( MicSize * sizeof(double));
-
-    maxvalueofcoeff = ( complex<double>*) malloc( harmonicsize * sizeof(complex<double>));
-
-    harmonic_coeff = (complex<double>*) malloc( (samplesize) * (harmonicsize) * sizeof(complex<double>));
-
-    QString filename;  // =ui->comboBox_4->currentText();
-
-    QString folderm = "C:\\Spatial_audio\\Eigenmike_Beamforming\\Eigenmike_Beamforming\\" + filename;
-
-
-    //Get pressure values from txt file
-    QFile file(folderm);
-
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-
-    QTextStream in(&file);
-
-
-
-
-
-    for(int kml=0;kml < MicSize;kml++ )
-        *(pressurevalues+kml) = 0;
-
-    double val =0;
-
-    for(int i = 0; i < samplesize; ++i)
-            {
-          QString line = in.readLine();
-
-          QVector<QString> var = line.split(" ").toVector();
-
-          int count = 0;
-
-          bool canenter = false;
-
-          for(int kl=0; kl< var.size();kl++)
-                {
-                if(var.at(kl)!="")
-                    {
-
-                        if((var.at(kl).toDouble() > val))
-                           {
-
-                                canenter = true;
-                                val= var.at(kl).toDouble();
-
-                            }
-                            *(pressurevalues_def+count)= var.at(kl).toDouble();
-                           count++;
-
-                    }
-                }
-                if(canenter)
-                    memcpy(pressurevalues,pressurevalues_def,MicSize*sizeof(double));
-            }
-
-    //Get Microphone values and Coefficients
-
-    QFile filemic("C:\\Spatial_audio\\angles.txt");
-
-    filemic.open(QIODevice::ReadOnly | QIODevice::Text);
-
-    QTextStream inmic(&filemic);
-
-    for(int i = 0; i < MicSize; ++i)
-            {
-          QString line = inmic.readLine();
-
-          QVector<QString> var = line.split(" ").toVector();
-
-          int count = 0;
-
-          for(int kl=0; kl< var.size();kl++)
-                {
-                if(var.at(kl)!="")
-                    {
-
-                        if(count!=2)
-                            *(angles_fnm+count+i*2)= var.at(kl).toDouble();
-                        else
-                            *(surface_coeff+i)= var.at(kl).toDouble();
-                        count++;
-                    }
-                }
-            }
-
-
-    //Get Coefficients
-
-complex<float> zeroval(0,0);
-
-for(int km =0;km < 25 ; km++)
-{
-
-    *(maxvalueofcoeff+km) = zeroval;
-
-}
-
-
-
-        for(int ml=0;ml < MicSize;ml++)
-        {
-
-
-     model::point<long double, 2, cs::spherical<radian> > p2((*(angles_fnm+(ml*2))*PI/180),(*(angles_fnm+(ml*2)+1)*PI/180));
-
-     int counter = 0;
-
-     for(int sph_n=0;sph_n < Nharm;sph_n ++)
-            {
-
-                for(int sph_m= -sph_n ; sph_m <= sph_n ;sph_m++)
-                    {
-
-                        complex<double> calcharmonic =  (complex<double>)spherical_harmonic(sph_n,sph_m,get<0>(p2),get<1>(p2));
-
-                        complex<double> harmonic = conj(calcharmonic);
-
-                        *(maxvalueofcoeff+counter) += ((complex<double>)pressurevalues[ml]) * harmonic  * (*(surface_coeff+ml));
-
-                        counter++;
-
-                    }
-           }
-        }
-
-
-
-}
-
 complex<double>* pressure;
-
-void MainWindow::convolvesignals()
-{
-
-    //Get 2 seconds of each signal
-    int getsamplesize = 88200;
-
-    //First RIR
-    QString filename; //= ui->comboBox_4->currentText();
-    QString folderm = "C:\\Spatial_audio\\Eigenmike_Beamforming\\Eigenmike_Beamforming\\" + filename;
-    //Get pressure values from txt file
-    QFile file(folderm);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&file);
-
-    double * RIR_32        = (double*) malloc(32 *getsamplesize* sizeof(double));
-
-    //First Sound
-    QString recfilename; //= ui->comboBox_5->currentText();
-    QString recfolderm = "C:\\Spatial_audio\\Kayitlar\\" + recfilename;
-    //Get pressure values from txt file
-    QFile recfile(recfolderm);
-    recfile.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream recin(&recfile);
-
-    double * RecSound        = (double*) malloc(getsamplesize* sizeof(double));
-
-    for(int i = 0; i < getsamplesize; ++i)
-            {
-          QString line = in.readLine();
-          QString recline = recin.readLine();
-
-          QVector<QString> var = line.split(" ").toVector();
-            int count =0;
-          for(int kl=0; kl< var.size();kl++)
-                {
-                if(var.at(kl)!="")
-                    {
-                        *(RIR_32+i*32+count)= var.at(kl).toDouble();
-                        count++;
-                    }
-                }
-          QVector<QString> recvar = recline.split(" ").toVector();
-
-          for(int kl=0; kl< recvar.size();kl++)
-                {
-                if(recvar.at(kl)!="")
-                    {
-                        *(RecSound+i)= recvar.at(kl).toDouble();
-                    }
-                }
-
-
-            }
-
-    int nconv = getsamplesize+getsamplesize-1;
-
-   // double *   C = (double*) calloc(32 *nconv, sizeof(double));
-
-    int i, j, i1;
-    double tmp;
-
-    QFile writefile("out.txt");
-    writefile.open(QIODevice::WriteOnly | QIODevice::Text);
-       QTextStream outfile(&writefile);
-
-
-    for (i=0; i<nconv; i++)
-        {
-
-          for(int micno=0;micno < 32;micno++)
-          {
-            i1 = i;
-            tmp = 0.0;
-            for (j=0; j<getsamplesize; j++)
-            {
-                if(i1>=0 && i1<getsamplesize)
-                    tmp = tmp + (RIR_32[i1*32+micno]*RecSound[j]);
-
-                i1 = i1-1;
-               // C[i] = tmp;
-            }
-
-            outfile << tmp << " ";
-          }
-            outfile <<  "\n";
-        }
-
-    writefile.close();
-
-
-}
-
-
 
 
 void MainWindow::handlebutton()
@@ -1421,12 +1081,16 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
     colormap->data()->setSize(nx,ny);
     int iterationpx,iterationpy ;
     int region;
+    int widthpixelx;
+    int heightpixely;
 
     if(locsize == 12)
     {
         filename ="12.txt";
         iterationpx = 45;
         iterationpy = 30;
+        widthpixelx = 4;
+        heightpixely =3;
         region = 1;
     }
     else if(locsize == 48)
@@ -1434,6 +1098,8 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
         filename ="48.txt";
         iterationpx = 22.5;
         iterationpy = 15;
+        widthpixelx = 8;
+        heightpixely =6;
         region = 4;
     }
     else if(locsize == 192)
@@ -1441,6 +1107,8 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
         filename ="192.txt";
         iterationpx = 11.250;
         iterationpy = 7.5;
+        widthpixelx = 16;
+        heightpixely =12;
         region = 16;
     }
     else if(locsize == 768)
@@ -1448,6 +1116,8 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
         filename ="768.txt";
         iterationpx = 5.625;
         iterationpy = 3.75;
+        widthpixelx = 32;
+        heightpixely =24;
         region = 64;
     }
     else if(locsize == 3072)
@@ -1455,6 +1125,8 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
         filename ="3072.txt";
         iterationpx = 2.8125;
         iterationpy = 1.875;
+        widthpixelx = 64;
+        heightpixely =48;
         region = 256;
     }
     else if(locsize == 12288)
@@ -1532,7 +1204,7 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
     for(int yk=0;yk< 12;yk++)
     {
 
-        if(regionpixels[yk]>10)
+        if(regionpixels[yk]>0)
         {
         resultazimuth[yk] = regionsumazimuth[yk];
         resultelevation[yk] = regionsumelevation[yk];
@@ -1567,7 +1239,7 @@ void MainWindow::PowerMapPlotRI(double *values,bool* PutArea,double* Az,double* 
             bool issource = true;
             for(int ko=0;ko < azimuth.length();ko++)
             {
-                if(abs(azimuth.at(ko)-resultazimuth[jl]) <25)
+                if(abs(azimuth.at(ko)-resultazimuth[jl]) <45)
                 {
                     issource = false;
 
@@ -1644,8 +1316,9 @@ void MainWindow::PowerMapPlot(double *values)
 
 
     colormap->setGradient(QCPColorGradient::gpPolar);
-    colormap->rescaleDataRange(true);
+
     colormap->setInterpolate(false);
+    colormap->rescaleDataRange(true);
     colormap->setDataScaleType(QCPAxis::ScaleType::stLinear);
 
     ui->phaseplot->xAxis->setRange(0,360);
